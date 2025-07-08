@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articulation Arcade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Source+Sans+Pro:wght@600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            touch-action: manipulation;
+        }
+        .arcade-font {
+            font-family: 'Press Start 2P', cursive;
+        }
+        #game-canvas {
+            background-color: #111827; /* gray-900 */
+            border-radius: 0.5rem;
+            border: 4px solid #1f2937; /* gray-800 */
+            cursor: default;
+        }
+        .nav-btn, .game-btn {
+             box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+             user-select: none;
+             transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+        .nav-btn:active, .game-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+        .status-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <!-- Main Game Wrapper -->
+    <div class="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 w-full max-w-lg text-center">
+
+        <!-- Main Menu Screen -->
+        <div id="main-menu-screen">
+            <h1 class="text-3xl md:text-4xl text-blue-600 arcade-font">Articulation Arcade</h1>
+            <p class="mt-4 mb-6 text-gray-600">Choose a game to play:</p>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                <button data-game="maze" class="game-btn bg-yellow-400 hover:bg-yellow-500 text-black p-3 rounded-lg arcade-font text-xs leading-tight">Word Maze</button>
+                <button data-game="shooter" class="game-btn bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg arcade-font text-xs leading-tight">Star Words</button>
+                <button data-game="jumper" class="game-btn bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg arcade-font text-xs leading-tight">Word Jumper</button>
+                <button data-game="breaker" class="game-btn bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg arcade-font text-xs leading-tight">Brick Breaker</button>
+                <button data-game="popper" class="game-btn bg-pink-400 hover:bg-pink-500 text-white p-3 rounded-lg arcade-font text-xs leading-tight">Bubble Pop</button>
+                <button data-game="fall" class="game-btn bg-cyan-500 hover:bg-cyan-600 text-white p-3 rounded-lg arcade-font text-xs leading-tight">Word Fall</button>
+            </div>
+        </div>
+
+        <!-- Sound Selection Screen -->
+        <div id="sound-select-screen" class="hidden">
+            <h1 id="sound-select-title" class="text-2xl md:text-3xl text-blue-600 arcade-font">Select Sound</h1>
+            <p class="mt-4 mb-6 text-gray-600">Choose a sound to practice:</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                <button data-sound="s" class="nav-btn bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-lg arcade-font text-sm">/s/</button>
+                <button data-sound="l" class="nav-btn bg-green-500 hover:bg-green-600 text-white p-3 rounded-lg arcade-font text-sm">/l/</button>
+                <button data-sound="r" class="nav-btn bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg arcade-font text-sm">/r/</button>
+                <button data-sound="k" class="nav-btn bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-lg arcade-font text-sm">/k/</button>
+                <button data-sound="g" class="nav-btn bg-indigo-500 hover:bg-indigo-600 text-white p-3 rounded-lg arcade-font text-sm">/g/</button>
+                <button data-sound="sh" class="nav-btn bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-lg arcade-font text-sm">SH</button>
+                <button data-sound="ch" class="nav-btn bg-orange-500 hover:bg-orange-600 text-white p-3 rounded-lg arcade-font text-sm">CH</button>
+                <button data-sound="th" class="nav-btn bg-teal-500 hover:bg-teal-600 text-white p-3 rounded-lg arcade-font text-sm">TH</button>
+            </div>
+            <button id="back-to-main-menu" class="mt-6 text-gray-500 hover:text-blue-600 arcade-font text-xs">◂ Main Menu</button>
+        </div>
+
+        <!-- Position Selection Screen -->
+        <div id="position-select-screen" class="hidden">
+            <h1 id="position-title" class="text-3xl md:text-4xl text-blue-600 arcade-font">/s/ Words</h1>
+            <p class="mt-4 mb-6 text-gray-600">Choose a word position:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button data-type="initial" class="nav-btn bg-green-500 hover:bg-green-600 text-white p-4 rounded-lg arcade-font text-sm">Initial</button>
+                <button data-type="medial" class="nav-btn bg-yellow-500 hover:bg-yellow-600 text-white p-4 rounded-lg arcade-font text-sm">Medial</button>
+                <button data-type="final" class="nav-btn bg-red-500 hover:bg-red-600 text-white p-4 rounded-lg arcade-font text-sm">Final</button>
+                <button data-type="mixed" class="nav-btn bg-purple-500 hover:bg-purple-600 text-white p-4 rounded-lg arcade-font text-sm">Mixed</button>
+            </div>
+             <button id="back-to-sounds" class="mt-6 text-gray-500 hover:text-blue-600 arcade-font text-xs">◂ Back to Sounds</button>
+        </div>
+
+        <!-- Game Container -->
+        <div id="game-container" class="hidden">
+            <h1 id="game-title" class="text-2xl md:text-3xl text-blue-600 arcade-font">Word Maze</h1>
+            <div class="my-4 bg-gray-800 text-white p-3 rounded-lg arcade-font text-xs sm:text-sm status-bar">
+                <div class="text-left">SCORE: <span id="score">0</span></div>
+                <div class="text-right">WORDS: <span id="words-left">0</span></div>
+                <div id="last-item-eaten" class="text-yellow-400 col-span-2 text-center mt-2">ATE: ---</div>
+            </div>
+            <canvas id="game-canvas" width="450" height="450"></canvas>
+            <div id="touch-controls-container" class="mt-4 md:hidden">
+                <!-- Touch controls will be dynamically generated here -->
+            </div>
+            <button id="exit-game-btn" class="mt-4 bg-red-500 text-white font-bold py-2 px-6 rounded-full hover:bg-red-600 shadow-lg w-full sm:w-auto arcade-font text-xs">Main Menu</button>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- GLOBAL ELEMENTS & STATE ---
+        const screens = { mainMenu: document.getElementById('main-menu-screen'), soundSelect: document.getElementById('sound-select-screen'), positionSelect: document.getElementById('position-select-screen'), game: document.getElementById('game-container'), };
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const wordsLeftEl = document.getElementById('words-left');
+        const lastItemEl = document.getElementById('last-item-eaten');
+        const touchControlsContainer = document.getElementById('touch-controls-container');
+        
+        let player, words, wordsRemaining, score, gameOver, frameCount, isPaused, flashInfo, gameLoopId, maze, currentSound, currentGame, gameObjects;
+
+        // --- DATA ---
+        const TILE_SIZE = 30; // 450 / 15
+        const MAZE_COLS = 15;
+        const MAZE_ROWS = 15;
+        const mazeLayouts = [
+            [ [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],[1,0,1,1,1,0,1,1,1,0,1,0,1,1,1],[1,0,0,0,0,0,0,0,1,0,0,0,0,0,1],[1,0,1,0,1,1,1,0,1,1,1,1,1,0,1],[1,0,1,0,0,0,1,0,0,0,0,0,1,0,1],[1,0,1,1,1,0,1,1,1,1,1,0,1,0,1],[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],[1,0,1,1,1,1,1,1,1,0,1,1,1,0,1],[1,0,0,0,0,0,0,0,1,0,0,0,1,0,1],[1,1,1,0,1,1,1,0,1,1,1,0,1,1,1],[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],[1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],[1,0,0,0,0,0,1,0,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] ],
+            [ [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],[1,0,1,0,0,1,0,0,0,1,0,0,1,0,1],[1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,1,1,1,1,0,1,1,1,0,1,1,1,1,1],[1,0,0,0,0,0,1,0,1,0,0,0,0,0,1],[1,1,1,1,1,0,1,1,1,0,1,1,1,1,1],[1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],[1,0,1,0,1,1,1,1,1,1,1,0,1,0,1],[1,0,1,0,0,1,0,0,0,1,0,0,1,0,1],[1,0,1,1,0,1,0,1,0,1,0,1,1,0,1],[1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] ],
+            [ [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],[1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],[1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],[1,1,1,0,1,1,0,1,0,1,1,0,1,1,1],[1,0,0,0,0,1,0,1,0,1,0,0,0,0,1],[1,0,1,1,0,0,0,0,0,0,0,1,1,0,1],[1,0,0,1,1,1,1,0,1,1,1,1,0,0,1],[1,0,1,1,0,0,0,0,0,0,0,1,1,0,1],[1,0,0,0,0,1,0,1,0,1,0,0,0,0,1],[1,1,1,0,1,1,0,1,0,1,1,0,1,1,1],[1,0,0,0,0,0,0,1,0,0,0,0,0,0,1],[1,0,1,0,1,0,1,1,1,0,1,0,1,0,1],[1,0,0,0,1,0,0,0,0,0,1,0,0,0,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] ]
+        ];
+        const wordLists = {
+            s: { initial: ['see','sun','soup','seven','city','sand','safe','soon','sick','salad','salt','same','sing','sit','sad'], medial: ['castle','pencil','bicycle','fossil','whistle','muscle','eraser','dessert','dinosaur','message','listen','lesson','messy','beside','inside'], final: ['bus','house','mouse','ice','juice','goose','horse','face','dice','kiss','miss','plus','yes','gas','this'], },
+            l: { initial: ['lamp','leaf','lion','leg','light','look','long','like','lemon','letter','live','laugh','lake','late','line'], medial: ['yellow','balloon','dollar','silly','jelly','salad','color','pillow','ruler','bowling','follow','calendar','elephant','celery','police'], final: ['ball','fall','tall','bell','shell','full','pull','mail','nail','wheel','seal','pool','cool','meal','tail'], },
+            r: { initial: ['run','red','rain','rock','read','right','rabbit','robot','ring','room','rope','rice','rug','road','rainbow'], medial: ['carrot','story','zero','giraffe','orange','parrot','cherry','arrow','boring','hurry','marry','sorry','pirate','syrup','library'], final: ['car','star','door','four','bear','chair','pear','fire','more','poor','store','hair','year','far','jar'], },
+            k: { initial: ['cat','key','king','kite','kick','keep','kind','cup','car','coat','cake','corn','cow','candy','comb'], medial: ['pocket','monkey','talking','vacuum','bucket','chicken','rocket','jacket','doctor','soccer','bacon','napkin','pumpkin','baking','turkey'], final: ['book','look','cook','back','pack','sick','kick','duck','sock','rock','bike','like','take','make','snake'], },
+            g: { initial: ['go','game','give','good','green','grass','goat','ghost','gum','gas','gold','goose','girl','gift','guitar'], medial: ['bigger','digging','wagon','tiger','sugar','again','hungry','finger','magnet','dragon','juggle','eagle','foggy','buggy','wiggle'], final: ['dog','pig','big','dig','leg','egg','bag','rug','hug','mug','frog','flag','log','bug','tug'], },
+            sh: { initial: ['shoe','ship','sheep','shell','shirt','shake','shadow','shampoo','sharp','shine','shop','shut','she','shovel','shower'], medial: ['washing','pushing','fishing','mushroom','ocean','tissue','sunshine','dishes','splashing','nation','motion','lotion','cashew','spaceship','machine'], final: ['fish','dish','wish','push','cash','wash','brush','flash','trash','fresh','crash','smash','eyelash','finish','radish'], },
+            ch: { initial: ['chew','cheese','chair','chicken','chin','chip','chalk','check','cherry','chase','church','chest','chilly','chimp','cheek'], medial: ['kitchen','watching','teacher','ketchup','matching','nature','future','picture','statue','itchy','lunchbox','reaching','catching','hatchet','fortune'], final: ['watch','catch','match','teach','beach','peach','reach','rich','lunch','bench','inch','pinch','witch','couch','branch'], },
+            th: { initial: ['thumb','thin','think','thank','thirsty','three','throw','thunder','thorn','thief','thimble','thick','thigh','theme','theater'], medial: ['birthday','toothbrush','bathtub','healthy','wealthy','something','nothing','anything','python','author','athlete','panther','toothpaste','pathway','faithful'], final: ['bath','math','path','mouth','tooth','cloth','earth','north','south','both','moth','wreath','beneath','broth','myth'], }
+        };
+        const brickLayouts = [
+            [[1,1,1,1,1],[1,1,1,1,1]], // Solid 2 rows
+            [[1,0,1,0,1],[0,1,0,1,0],[1,0,1,0,1]], // Checkerboard
+            [[1,1,0,1,1],[0,1,1,1,0]]  // V-shape
+        ];
+
+        // --- NAVIGATION & CONTROL SETUP ---
+        function showScreen(screenName) {
+            Object.values(screens).forEach(s => s.classList.add('hidden'));
+            screens[screenName].classList.remove('hidden');
+        }
+
+        function setupTouchControls(type) {
+            touchControlsContainer.innerHTML = ''; // Clear previous controls
+            if (type === 'arrows') {
+                touchControlsContainer.innerHTML = `
+                    <div class="flex justify-center mb-2">
+                        <button id="up-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">▲</button>
+                    </div>
+                    <div class="flex justify-center gap-2">
+                        <button id="left-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">◀</button>
+                        <button id="down-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">▼</button>
+                        <button id="right-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">▶</button>
+                    </div>`;
+                document.getElementById('up-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowUp'}));
+                document.getElementById('down-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowDown'}));
+                document.getElementById('left-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowLeft'}));
+                document.getElementById('right-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowRight'}));
+            } else if (type === 'left-right-fire') {
+                 touchControlsContainer.innerHTML = `
+                    <div class="flex justify-center items-center gap-4">
+                        <button id="left-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">◀</button>
+                        <button id="fire-btn" class="nav-btn bg-red-400 text-white w-20 h-20 rounded-full text-lg active:bg-red-500">FIRE</button>
+                        <button id="right-btn" class="nav-btn bg-gray-300 w-16 h-16 rounded-lg text-2xl active:bg-gray-400">▶</button>
+                    </div>`;
+                document.getElementById('left-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowLeft'}));
+                document.getElementById('right-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowRight'}));
+                document.getElementById('fire-btn').addEventListener('click', () => handleKeyPress({key: ' '}));
+            } else if (type === 'left-right') {
+                 touchControlsContainer.innerHTML = `
+                    <div class="flex justify-center gap-2">
+                        <button id="left-btn" class="nav-btn bg-gray-300 w-20 h-20 rounded-lg text-2xl active:bg-gray-400">◀</button>
+                        <button id="right-btn" class="nav-btn bg-gray-300 w-20 h-20 rounded-lg text-2xl active:bg-gray-400">▶</button>
+                    </div>`;
+                document.getElementById('left-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowLeft'}));
+                document.getElementById('right-btn').addEventListener('click', () => handleKeyPress({key: 'ArrowRight'}));
+            }
+        }
+
+        // --- UNIVERSAL GAME LOGIC ---
+        function startWordFlash(word) {
+            isPaused = true;
+            flashInfo.word = word;
+            flashInfo.count = 0;
+            flashInfo.visible = true;
+            flashInfo.interval = setInterval(() => {
+                flashInfo.visible = !flashInfo.visible;
+                if (flashInfo.visible) flashInfo.count++;
+                if (flashInfo.count >= 3) {
+                    clearInterval(flashInfo.interval);
+                    isPaused = false;
+                    flashInfo.word = '';
+                }
+            }, 875); // 875ms on, 875ms off = 1.75s total interval
+        }
+        
+        function updateStatus() {
+            scoreEl.textContent = score;
+            wordsLeftEl.textContent = wordsRemaining;
+            if (wordsRemaining === 0 && !gameOver) {
+                gameOver = true;
+            }
+        }
+        
+        // --- GAME INITIALIZATION ---
+        function initializeGame(gameType, soundType, positionType) {
+            currentGame = gameType;
+            let wordPool = [];
+            if (positionType === 'mixed') {
+                wordPool = [...wordLists[soundType].initial, ...wordLists[soundType].medial, ...wordLists[soundType].final];
+            } else {
+                wordPool = wordLists[soundType][positionType];
+            }
+            wordPool.sort(() => 0.5 - Math.random());
+            const gameWords = wordPool.slice(0, 10); // Use 10 words
+
+            gameOver = isPaused = false;
+            frameCount = score = 0;
+            words = [];
+            gameObjects = {};
+            flashInfo = { word: '', count: 0, visible: false, interval: null };
+            lastItemEl.textContent = 'ATE: ---';
+            
+            const gameInitializers = {
+                maze: initializeMazeGame, shooter: initializeShooterGame, jumper: initializeJumperGame,
+                breaker: initializeBreakerGame, popper: initializePopperGame, fall: initializeFallGame,
+            };
+            if (gameInitializers[currentGame]) gameInitializers[currentGame](gameWords);
+            else { console.error("Unknown game type:", currentGame); showScreen('mainMenu'); return; }
+
+            wordsRemaining = words.length;
+            updateStatus();
+            
+            if(gameLoopId) cancelAnimationFrame(gameLoopId);
+            gameLoop();
+        }
+
+        // --- GAME LOOP & DRAWING ---
+        function gameLoop() {
+            if (!isPaused) frameCount++;
+            
+            const gameUpdaters = {
+                maze: updateMazeGame, shooter: updateShooterGame, jumper: updateJumperGame,
+                breaker: updateBreakerGame, popper: updatePopperGame, fall: updateFallGame,
+            };
+            if (gameUpdaters[currentGame] && !isPaused && !gameOver) gameUpdaters[currentGame]();
+
+            draw();
+            gameLoopId = requestAnimationFrame(gameLoop);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#111827';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const gameDrawers = {
+                maze: drawMazeGame, shooter: drawShooterGame, jumper: drawJumperGame,
+                breaker: drawBreakerGame, popper: drawPopperGame, fall: drawFallGame,
+            };
+            if (gameDrawers[currentGame]) gameDrawers[currentGame]();
+
+            if (isPaused) drawFlashingWord();
+            if (gameOver) drawWinScreen();
+        }
+        
+        function drawFlashingWord() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            if (flashInfo.visible && flashInfo.word) {
+                ctx.fillStyle = '#facc15';
+                ctx.textAlign = 'center';
+                ctx.font = `24px "Press Start 2P"`;
+                ctx.fillText(flashInfo.word.toUpperCase(), canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        function drawWinScreen() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#facc15';
+            ctx.textAlign = 'center';
+            ctx.font = `30px "Press Start 2P"`;
+            ctx.fillText('YOU WIN!', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.font = `14px "Press Start 2P"`;
+            ctx.fillText(`SCORE: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+        }
+        
+        // --- EVENT LISTENERS ---
+        function handleKeyPress(e) {
+            if (isPaused) return;
+            const key = e.key;
+            const keyHandlers = {
+                maze: handleMazeKeys, shooter: handleShooterKeys, jumper: handleJumperKeys,
+                breaker: handleBreakerKeys, fall: handleFallKeys
+            };
+            if (keyHandlers[currentGame]) keyHandlers[currentGame](key);
+        }
+        window.addEventListener('keydown', handleKeyPress);
+        canvas.addEventListener('click', (e) => { if (currentGame === 'popper' && !isPaused) handlePopperClick(e); });
+        
+        document.querySelectorAll('.game-btn, [data-sound], [data-type]').forEach(btn => btn.addEventListener('click', handleNav));
+        document.getElementById('exit-game-btn').addEventListener('click', () => { showScreen('mainMenu'); if(gameLoopId) cancelAnimationFrame(gameLoopId); gameLoopId = null; });
+        document.getElementById('back-to-sounds').addEventListener('click', () => showScreen('soundSelect'));
+        document.getElementById('back-to-main-menu').addEventListener('click', () => showScreen('mainMenu'));
+
+        function handleNav(e) {
+            const target = e.currentTarget;
+            if (target.matches('.game-btn')) {
+                currentGame = target.dataset.game;
+                showScreen('soundSelect');
+                document.getElementById('sound-select-title').textContent = `${currentGame.charAt(0).toUpperCase() + currentGame.slice(1)}`;
+            } else if (target.matches('[data-sound]')) {
+                currentSound = target.dataset.sound;
+                const title = document.getElementById('position-title');
+                title.textContent = `/${currentSound}/ Words`;
+                if(['sh', 'ch', 'th'].includes(currentSound)) title.textContent = `${currentSound.toUpperCase()} Words`;
+                showScreen('positionSelect');
+            } else if (target.matches('[data-type]')) {
+                const positionType = target.dataset.type;
+                const gameTitle = document.getElementById('game-title');
+                let soundName = `/${currentSound}/`;
+                if(['sh', 'ch', 'th'].includes(currentSound)) soundName = currentSound.toUpperCase();
+                gameTitle.textContent = `${currentGame.charAt(0).toUpperCase() + currentGame.slice(1)} - ${positionType} ${soundName}`;
+                showScreen('game');
+                initializeGame(currentGame, currentSound, positionType);
+            }
+        }
+
+        // ==================================================================
+        // GAME IMPLEMENTATIONS
+        // ==================================================================
+
+        // --- MAZE GAME ---
+        function initializeMazeGame(gameWords) {
+            setupTouchControls('arrows');
+            maze = mazeLayouts[Math.floor(Math.random() * mazeLayouts.length)];
+            let emptyCells = getEmptyCells(maze);
+            const playerPos = emptyCells.splice(Math.floor(Math.random() * emptyCells.length), 1)[0];
+            player = { row: playerPos.row, col: playerPos.col, x: playerPos.col * TILE_SIZE, y: playerPos.row * TILE_SIZE, size: TILE_SIZE * 0.4, color: '#facc15', mouthAngle: 0.2, direction: 'right' };
+            gameObjects.snakes = [];
+            for (const wordText of gameWords) { if(emptyCells.length === 0) break; const pos = emptyCells.splice(Math.floor(Math.random() * emptyCells.length), 1)[0]; words.push({ text: wordText, row: pos.row, col: pos.col, eaten: false }); }
+            for (let i = 0; i < 3; i++) { if(emptyCells.length === 0) break; const pos = emptyCells.splice(Math.floor(Math.random() * emptyCells.length), 1)[0]; gameObjects.snakes.push({ row: pos.row, col: pos.col, eaten: false }); }
+        }
+        function updateMazeGame() {
+            player.x += (player.col * TILE_SIZE - player.x) * 0.5;
+            player.y += (player.row * TILE_SIZE - player.y) * 0.5;
+            const word = words.find(w => !w.eaten && w.row === player.row && w.col === player.col);
+            if (word) { word.eaten = true; wordsRemaining--; score += 10; lastItemEl.textContent = `ATE: ${word.text.toUpperCase()} (+10)`; startWordFlash(word.text); updateStatus(); }
+            const snake = gameObjects.snakes.find(s => !s.eaten && s.row === player.row && s.col === player.col);
+            if (snake) { snake.eaten = true; score += 50; lastItemEl.textContent = 'ATE: BONUS SNAKE! (+50)'; }
+        }
+        function drawMazeGame() {
+            drawWalls(); drawMazeItems();
+            player.mouthAngle = Math.abs(Math.sin(frameCount * 0.2)) * 0.35 + 0.05;
+            ctx.save(); ctx.translate(player.x + TILE_SIZE / 2, player.y + TILE_SIZE / 2);
+            if(player.direction === 'right') ctx.rotate(0); if(player.direction === 'down') ctx.rotate(Math.PI / 2); if(player.direction === 'left') ctx.rotate(Math.PI); if(player.direction === 'up') ctx.rotate(-Math.PI / 2);
+            ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(0, 0, player.size, player.mouthAngle, -player.mouthAngle); ctx.lineTo(0, 0); ctx.fill(); ctx.restore();
+        }
+        function drawWalls() { for (let r = 0; r < MAZE_ROWS; r++) for (let c = 0; c < MAZE_COLS; c++) if (maze[r][c] === 1) { const x = c * TILE_SIZE, y = r * TILE_SIZE; const grad = ctx.createLinearGradient(x, y, x + TILE_SIZE, y + TILE_SIZE); grad.addColorStop(0, '#4f8ff7'); grad.addColorStop(1, '#2c5282'); ctx.fillStyle = grad; ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE); ctx.strokeStyle = '#6b9eff'; ctx.strokeRect(x,y,TILE_SIZE, TILE_SIZE); } }
+        function drawMazeItems() {
+            ctx.fillStyle = 'white'; ctx.font = `bold ${TILE_SIZE * 0.3}px "Press Start 2P"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.shadowColor = 'cyan'; ctx.shadowBlur = 5;
+            for (const word of words) if (!word.eaten) ctx.fillText(word.text.toUpperCase(), word.col * TILE_SIZE + TILE_SIZE / 2, word.row * TILE_SIZE + TILE_SIZE / 2);
+            ctx.shadowBlur = 0; ctx.strokeStyle = '#10B981'; ctx.lineWidth = 3; ctx.shadowColor = '#10B981'; ctx.shadowBlur = 8;
+            for (const snake of gameObjects.snakes) if (!snake.eaten) { const x = snake.col * TILE_SIZE, y = snake.row * TILE_SIZE; ctx.beginPath(); ctx.moveTo(x + TILE_SIZE*0.2, y + TILE_SIZE*0.8); ctx.bezierCurveTo(x + TILE_SIZE*0.4, y + TILE_SIZE*0.2, x + TILE_SIZE*0.6, y + TILE_SIZE*1.2, x + TILE_SIZE*0.8, y + TILE_SIZE*0.2); ctx.stroke(); ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(x + TILE_SIZE * 0.7, y + TILE_SIZE * 0.3, 2, 0, Math.PI * 2); ctx.fill(); }
+            ctx.shadowBlur = 0; ctx.lineWidth = 1;
+        }
+        function handleMazeKeys(key) {
+            let moved = false;
+            if (key === 'ArrowUp') { player.row--; if(maze[player.row][player.col]===1) player.row++; else { player.direction = 'up'; moved=true; } }
+            else if (key === 'ArrowDown') { player.row++; if(maze[player.row][player.col]===1) player.row--; else { player.direction = 'down'; moved=true; } }
+            else if (key === 'ArrowLeft') { player.col--; if(maze[player.row][player.col]===1) player.col++; else { player.direction = 'left'; moved=true; } }
+            else if (key === 'ArrowRight') { player.col++; if(maze[player.row][player.col]===1) player.col--; else { player.direction = 'right'; moved=true; } }
+            if(moved) updateMazeGame();
+        }
+        function getEmptyCells(currentMaze) { const cells = []; for (let r = 0; r < MAZE_ROWS; r++) for (let c = 0; c < MAZE_COLS; c++) if (currentMaze[r][c] === 0) cells.push({ row: r, col: c }); return cells; }
+
+        // --- STAR WORDS (SHOOTER) ---
+        function initializeShooterGame(gameWords) {
+            setupTouchControls('left-right-fire');
+            player = { x: canvas.width / 2 - 20, y: canvas.height - 40, width: 40, height: 20, speed: 7 };
+            gameObjects.lasers = [];
+            words = gameWords.map((w,i) => ({text: w, eaten: false, x: (i % 5) * 85 + 25, y: -30 - (Math.floor(i / 5) * 60) - (Math.random() * 100), width: 80, height: 25, speed: 0.3 + Math.random() * 0.7 }));
+        }
+        function updateShooterGame() {
+            for (let i = gameObjects.lasers.length - 1; i >= 0; i--) { gameObjects.lasers[i].y -= 5; if (gameObjects.lasers[i].y < 0) gameObjects.lasers.splice(i, 1); }
+            for (const target of words) if (!target.eaten) { target.y += target.speed; if (target.y > canvas.height) target.y = -20 - Math.random() * 100; }
+            for (let i = gameObjects.lasers.length - 1; i >= 0; i--) { for (let j = words.length - 1; j >= 0; j--) {
+                const laser = gameObjects.lasers[i]; const target = words[j];
+                if (!target.eaten && laser && laser.x < target.x + target.width && laser.x + 5 > target.x && laser.y < target.y + target.height && laser.y + 10 > target.y) {
+                    target.eaten = true; gameObjects.lasers.splice(i, 1); wordsRemaining--; score += 10; lastItemEl.textContent = `ATE: ${target.text.toUpperCase()} (+10)`; startWordFlash(target.text); updateStatus(); break;
+                }
+            }}
+        }
+        function drawShooterGame() {
+            ctx.fillStyle = '#fde047'; for (const laser of gameObjects.lasers) { ctx.shadowBlur = 5; ctx.shadowColor = '#fde047'; ctx.fillRect(laser.x, laser.y, 5, 15); ctx.shadowBlur = 0; }
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            for (const target of words) if (!target.eaten) {
+                ctx.fillStyle = '#9ca3af'; ctx.beginPath(); ctx.ellipse(target.x + target.width/2, target.y + target.height/2, target.width/2, target.height * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#4b5563'; ctx.beginPath(); ctx.ellipse(target.x + target.width/2, target.y + target.height/2, target.width/3, target.height * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'white'; ctx.font = `10px "Press Start 2P"`; ctx.fillText(target.text.toUpperCase(), target.x + target.width / 2, target.y + target.height / 2);
+            }
+            ctx.fillStyle = '#e5e7eb'; ctx.fillRect(player.x, player.y + 5, player.width, player.height);
+            ctx.fillStyle = '#9ca3af'; ctx.fillRect(player.x + 5, player.y, player.width - 10, player.height);
+            ctx.fillStyle = '#3b82f6'; ctx.fillRect(player.x + 15, player.y - 5, 10, 10);
+            ctx.fillStyle = `rgba(251, 191, 36, ${Math.random() * 0.5 + 0.5})`; ctx.beginPath(); ctx.moveTo(player.x + 15, player.y + 20); ctx.lineTo(player.x + 25, player.y + 20); ctx.lineTo(player.x + 20, player.y + 30 + Math.random() * 10); ctx.closePath(); ctx.fill();
+        }
+        function handleShooterKeys(key) {
+            if (key === 'ArrowLeft') player.x = Math.max(0, player.x - player.speed);
+            if (key === 'ArrowRight') player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+            if (key === ' ' && gameObjects.lasers.length < 5) gameObjects.lasers.push({ x: player.x + 17.5, y: player.y });
+        }
+
+        // --- WORD JUMPER ---
+        function initializeJumperGame(gameWords) {
+            setupTouchControls('arrows');
+            words = gameWords.map(w => ({ text: w, eaten: false }));
+            gameObjects.level = 0;
+            setupJumperLevel();
+        }
+        function setupJumperLevel() {
+            player = { x: canvas.width / 2 - 15, y: canvas.height - 30, width: 30, height: 30, color: '#84cc16' };
+            gameObjects.targetWord = words[gameObjects.level];
+            const laneConfigs = [
+                [{ y: 360, speed: 1.0, color: '#ef4444' }, { y: 330, speed: -0.8, color: '#f97316' }],
+                [{ y: 300, speed: 1.5, color: '#ef4444' }],
+                [{ y: 240, speed: -1.2, color: '#86198f' }, { y: 210, speed: 1.3, color: '#be185d' }],
+                [{ y: 180, speed: -1.8, color: '#be185d' }],
+                [{ y: 120, speed: 1.0, color: '#0e7490' }, { y: 90, speed: -0.7, color: '#1d4ed8' }]
+            ];
+            gameObjects.lanes = [ { y: 420, type: 'safe'}, { y: 390, type: 'safe'} ];
+            for(let i = 0; i <= gameObjects.level && i < laneConfigs.length; i++) {
+                gameObjects.lanes.push(...laneConfigs[i]);
+                gameObjects.lanes.push({ y: laneConfigs[i][0].y - 60, type: 'safe' });
+            }
+            gameObjects.lanes.push({ y: 30, type: 'goal' });
+            for (const lane of gameObjects.lanes) if(lane.speed) {
+                lane.items = []; for (let i = 0; i < 3; i++) lane.items.push({ x: i * 180 + Math.random() * 50, width: lane.speed > 1.4 ? 50 : 80, height: 30 });
+            }
+        }
+        function updateJumperGame() {
+            for (const lane of gameObjects.lanes) if(lane.speed) for (const item of lane.items) {
+                item.x += lane.speed;
+                if (item.x > canvas.width && lane.speed > 0) item.x = -item.width;
+                if (item.x < -item.width && lane.speed < 0) item.x = canvas.width;
+                if (Math.abs(player.y - lane.y) < 1 && player.x < item.x + item.width && player.x + player.width > item.x) { player.x = canvas.width / 2 - 15; player.y = canvas.height - 30; }
+            }
+            if (player.y <= 30) {
+                const currentWord = gameObjects.targetWord;
+                currentWord.eaten = true;
+                wordsRemaining--; score += 25; lastItemEl.textContent = `ATE: ${currentWord.text.toUpperCase()} (+25)`;
+                updateStatus();
+                if(!gameOver) {
+                    gameObjects.level++;
+                    setupJumperLevel();
+                    startWordFlash(currentWord.text);
+                } else {
+                    startWordFlash(currentWord.text);
+                }
+            }
+        }
+        function drawJumperGame() {
+            for(const lane of gameObjects.lanes) {
+                if(lane.type === 'safe') ctx.fillStyle = '#16a34a';
+                else if (lane.type === 'goal') ctx.fillStyle = '#65a30d';
+                else ctx.fillStyle = '#475569';
+                ctx.fillRect(0, lane.y, canvas.width, 30);
+                if(lane.speed) for (const item of lane.items) { ctx.fillStyle = lane.color; ctx.fillRect(item.x, lane.y, item.width, item.height); ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(item.x+5, lane.y+5, item.width-10, 5); }
+            }
+            ctx.fillStyle = player.color; ctx.beginPath(); ctx.arc(player.x + 15, player.y + 15, 15, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.beginPath(); ctx.arc(player.x + 10, player.y + 10, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(player.x + 20, player.y + 10, 3, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = 'black'; ctx.font = `14px "Press Start 2P"`; ctx.textAlign = 'center'; ctx.fillText(gameObjects.targetWord.text.toUpperCase(), canvas.width / 2, 50);
+        }
+        function handleJumperKeys(key) {
+            if (key === 'ArrowUp') player.y -= 30; if (key === 'ArrowDown') player.y = Math.min(canvas.height - 30, player.y + 30);
+            if (key === 'ArrowLeft') player.x = Math.max(0, player.x - 30); if (key === 'ArrowRight') player.x = Math.min(canvas.width - 30, player.x + 30);
+        }
+
+        // --- BRICK BREAKER ---
+        function initializeBreakerGame(gameWords) {
+            setupTouchControls('left-right');
+            gameObjects.paddle = { x: canvas.width / 2 - 50, y: canvas.height - 30, width: 100, height: 15, speed: 10 };
+            gameObjects.ball = { x: canvas.width / 2, y: canvas.height / 2, radius: 8, dx: 3, dy: -3 };
+            words = [];
+            const layout = brickLayouts[Math.floor(Math.random() * brickLayouts.length)];
+            let wordIndex = 0;
+            for(let r = 0; r < layout.length; r++) for (let c = 0; c < layout[r].length; c++) {
+                if (layout[r][c] === 1 && gameWords[wordIndex]) {
+                    words.push({ text: gameWords[wordIndex], x: c * 90, y: r * 30 + 30, width: 90, height: 30, eaten: false });
+                    wordIndex++;
+                }
+            }
+        }
+        function updateBreakerGame() {
+            gameObjects.ball.x += gameObjects.ball.dx; gameObjects.ball.y += gameObjects.ball.dy;
+            if (gameObjects.ball.x + gameObjects.ball.radius > canvas.width || gameObjects.ball.x - gameObjects.ball.radius < 0) gameObjects.ball.dx *= -1;
+            if (gameObjects.ball.y - gameObjects.ball.radius < 0) gameObjects.ball.dy *= -1;
+            if (gameObjects.ball.y + gameObjects.ball.radius > gameObjects.paddle.y && gameObjects.ball.x > gameObjects.paddle.x && gameObjects.ball.x < gameObjects.paddle.x + gameObjects.paddle.width) gameObjects.ball.dy *= -1;
+            if (gameObjects.ball.y + gameObjects.ball.radius > canvas.height) { gameObjects.ball.x = canvas.width/2; gameObjects.ball.y = canvas.height/2; gameObjects.ball.dx = 3; gameObjects.ball.dy = -3; }
+            for (const brick of words) if (!brick.eaten && gameObjects.ball.x > brick.x && gameObjects.ball.x < brick.x + brick.width && gameObjects.ball.y > brick.y && gameObjects.ball.y < brick.y + brick.height) {
+                brick.eaten = true; gameObjects.ball.dy *= -1; wordsRemaining--; score += 10; lastItemEl.textContent = `ATE: ${brick.text.toUpperCase()} (+10)`; startWordFlash(brick.text); updateStatus();
+            }
+        }
+        function drawBreakerGame() {
+            const pad = gameObjects.paddle; ctx.fillStyle = '#db2777'; ctx.beginPath(); ctx.roundRect(pad.x, pad.y, pad.width, pad.height, 8); ctx.fill();
+            const ball = gameObjects.ball; ctx.fillStyle = '#fde047'; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.arc(ball.x-2, ball.y-2, ball.radius/2, 0, Math.PI*2); ctx.fill();
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            for (const brick of words) if (!brick.eaten) {
+                ctx.fillStyle = '#8b5cf6'; ctx.fillRect(brick.x, brick.y, brick.width - 2, brick.height - 2);
+                ctx.fillStyle = '#a78bfa'; ctx.fillRect(brick.x, brick.y, brick.width - 2, 5);
+                ctx.fillStyle = 'white'; ctx.font = `10px "Press Start 2P"`; ctx.fillText(brick.text.toUpperCase(), brick.x + brick.width / 2, brick.y + brick.height / 2);
+            }
+        }
+        function handleBreakerKeys(key) {
+            if (key === 'ArrowLeft') gameObjects.paddle.x = Math.max(0, gameObjects.paddle.x - gameObjects.paddle.speed);
+            if (key === 'ArrowRight') gameObjects.paddle.x = Math.min(canvas.width - gameObjects.paddle.width, gameObjects.paddle.x + gameObjects.paddle.speed);
+        }
+
+        // --- BUBBLE POP ---
+        function initializePopperGame(gameWords) {
+            setupTouchControls(null);
+            words = gameWords.map(w => ({ text: w, x: Math.random() * canvas.width, y: canvas.height + Math.random() * canvas.height, radius: 40 + Math.random() * 20, speed: 0.5 + Math.random(), eaten: false }));
+        }
+        function updatePopperGame() {
+            for (const bubble of words) if (!bubble.eaten) { bubble.y -= bubble.speed; if (bubble.y < -bubble.radius * 2) bubble.y = canvas.height + bubble.radius; }
+        }
+        function drawPopperGame() {
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            for (const bubble of words) if (!bubble.eaten) {
+                ctx.fillStyle = 'rgba(236, 72, 153, 0.7)'; ctx.beginPath(); ctx.arc(bubble.x, bubble.y, bubble.radius, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)'; ctx.beginPath(); ctx.arc(bubble.x - bubble.radius * 0.3, bubble.y - bubble.radius * 0.3, bubble.radius * 0.2, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'white'; ctx.font = `12px "Press Start 2P"`; ctx.fillText(bubble.text.toUpperCase(), bubble.x, bubble.y);
+            }
+        }
+        function handlePopperClick(e) {
+            if (isPaused) return;
+            const rect = canvas.getBoundingClientRect(); const mouseX = e.clientX - rect.left; const mouseY = e.clientY - rect.top;
+            for (const bubble of words) if (!bubble.eaten) {
+                const distance = Math.sqrt((mouseX - bubble.x)**2 + (mouseY - bubble.y)**2);
+                if (distance < bubble.radius) {
+                    bubble.eaten = true; wordsRemaining--; score += 10; lastItemEl.textContent = `ATE: ${bubble.text.toUpperCase()} (+10)`; startWordFlash(bubble.text); updateStatus(); break;
+                }
+            }
+        }
+        
+        // --- WORD FALL ---
+        function initializeFallGame(gameWords) {
+            setupTouchControls('left-right');
+            player = { x: canvas.width / 2 - 50, y: canvas.height - 40, width: 100, height: 20, speed: 10 };
+            words = gameWords.map(w => ({ text: w, x: Math.random() * (canvas.width - 80), y: -Math.random() * canvas.height * 2, width: 80, height: 25, speed: 0.5 + Math.random() * 1.5, eaten: false }));
+        }
+        function updateFallGame() {
+            for (const word of words) if (!word.eaten) {
+                word.y += word.speed;
+                if (word.y + word.height > player.y && word.y < player.y + player.height && word.x < player.x + player.width && word.x + word.width > player.x) {
+                    word.eaten = true; wordsRemaining--; score += 10; lastItemEl.textContent = `ATE: ${word.text.toUpperCase()} (+10)`; startWordFlash(word.text);
+                }
+                if (word.y > canvas.height) word.y = -20 - Math.random() * 200; // Reset if missed
+            }
+            updateStatus();
+        }
+        function drawFallGame() {
+            ctx.fillStyle = '#a16207'; ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#ca8a04'; ctx.fillRect(player.x+5, player.y+5, player.width-10, player.height-10);
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            for (const word of words) if (!word.eaten) {
+                ctx.fillStyle = '#06b6d4'; ctx.beginPath(); ctx.roundRect(word.x, word.y, word.width, word.height, 8); ctx.fill();
+                ctx.fillStyle = 'white'; ctx.font = `12px "Press Start 2P"`; ctx.fillText(word.text.toUpperCase(), word.x + word.width / 2, word.y + word.height / 2);
+            }
+        }
+        function handleFallKeys(key) {
+            if (key === 'ArrowLeft') player.x = Math.max(0, player.x - player.speed);
+            if (key === 'ArrowRight') player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+        }
+    });
+    </script>
+</body>
+</html>
